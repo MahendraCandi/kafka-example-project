@@ -22,9 +22,10 @@ public class AppController {
     public ResponseEntity<String> sendMessage(
             @PathVariable("topic-name") String topicName,
             @RequestParam("total-message") Integer totalMessage,
-            @RequestParam(value = "random-message-length", required = false, defaultValue = "100") int messageLength
+            @RequestParam(value = "random-message-length", required = false, defaultValue = "100") int messageLength,
+            @RequestParam(value = "is-use-key", required = false, defaultValue = "true") boolean isUseKey
     ) {
-        messageService.sendRandomMessage(topicName, totalMessage, messageLength);
+        messageService.sendRandomMessage(topicName, totalMessage, messageLength, isUseKey);
         return new ResponseEntity<>(
                 String.format("%s message has been sent to topic %s", totalMessage, topicName),
                 HttpStatus.OK);

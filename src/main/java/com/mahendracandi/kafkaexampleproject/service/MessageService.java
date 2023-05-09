@@ -24,16 +24,16 @@ public class MessageService {
         this.objectMapper = objectMapper;
     }
 
-    public void sendRandomMessage(String topicName, Integer totalMessage, int messageLength) {
+    public void sendRandomMessage(String topicName, Integer totalMessage, int messageLength, boolean isUseKey) {
         for (int i = 1; i <= totalMessage; i++){
             final var payload = RandomStringUtils.randomAlphanumeric(messageLength, messageLength);
-            send(buildGenericMessage(payload, topicName, String.format("AppCorrelationId%s", i)));
+            send(buildGenericMessage(String.format("%s-%s", i, payload), topicName, String.format("AppCorrelationId%s", i), isUseKey));
         }
     }
 
     public void sendBody(Map<String, Object> requestBodyAsJson, String topicName) throws JsonProcessingException {
         final var payload = objectMapper.writeValueAsString(requestBodyAsJson);
-        send(buildGenericMessage(payload, topicName, RandomStringUtils.randomAlphanumeric(5, 5)));
+        send(buildGenericMessage(payload, topicName, RandomStringUtils.randomAlphanumeric(5, 5), true));
     }
 
     private void send(Message<String> genericMessage) {
@@ -49,11 +49,16 @@ public class MessageService {
                 );
     }
 
-    private static Message<String> buildGenericMessage(String payload, String topicName, String correlationId) {
-        return MessageBuilder.withPayload(payload)
+    private static Message<String> buildGenericMessage(String payload, String topicName, String correlationId, boolean isUseKey) {
+        final var messageBuilder = MessageBuilder.withPayload(payload)
                 .setHeader(KafkaHeaders.TOPIC, topicName)
-                .setHeader(KafkaHeaders.MESSAGE_KEY, RandomStringUtils.randomAlphanumeric(20, 20))
-                .setHeader(KafkaHeaders.CORRELATION_ID, correlationId)
+                .setHeader(KafkaHeaders.CORRELATION_ID, correlationId);
+
+        if (isUseKey)
+            messageBuilder
+                .setHeader(KafkaHeaders.MESSAGE_KEY, RandomStringUtils.randomAlphanumeric(20, 20));
+
+        return messageBuilder
                 .build();
     }
 }
